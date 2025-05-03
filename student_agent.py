@@ -38,7 +38,7 @@ class Agent(object):
         self.action_space = gym.spaces.Discrete(5)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DuelingQNet(in_channels=4, n_actions=5).to(self.device)
-        self.model.load_state_dict(torch.load("/root/DRL-Assignment-3/rainbow_mario_final.pth", map_location=self.device))
+        self.model.load_state_dict(torch.load("rainbow_mario_final.pth", map_location=self.device))
         self.model.eval()
 
 
