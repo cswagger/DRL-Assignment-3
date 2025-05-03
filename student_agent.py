@@ -2,6 +2,7 @@ import gym
 import torch
 import numpy as np
 import torch.nn as nn
+import cv2 
 
 # Define the same Dueling Q Network architecture used in training
 class DuelingQNet(nn.Module):
@@ -42,12 +43,25 @@ class Agent(object):
         self.model.eval()
 
 
+
+
     def act(self, observation):
-        state = observation
-        if state.ndim == 4 and state.shape[-1] == 1:
-            state = state.squeeze(-1)
-        state = torch.FloatTensor(state.copy()).unsqueeze(0).to(self.device)  # Safe conversion
+        # observation shape: (240, 256, 3) -- RGB image from env
+        obs_gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)     # (240, 256)
+        obs_resized = cv2.resize(obs_gray, (84, 84))                 # (84, 84)
+        obs_normalized = obs_resized / 255.0                         # Normalize to [0, 1]
+
+        # Append to buffer of 4 frames (initialize if needed)
+        if not hasattr(self, 'frame_stack'):
+            self.frame_stack = [obs_normalized] * 4  # first time
+        else:
+            self.frame_stack.pop(0)
+            self.frame_stack.append(obs_normalized)
+
+        state = np.stack(self.frame_stack, axis=0)  # (4, 84, 84)
+        state = torch.FloatTensor(state).unsqueeze(0).to(self.device)  # (1, 4, 84, 84)
+
         with torch.no_grad():
             q_values = self.model(state)
-        action = torch.argmax(q_values, dim=1).item()
-        return action
+        return torch.argmax(q_values, dim=1).item()
+
