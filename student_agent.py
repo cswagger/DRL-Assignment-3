@@ -43,11 +43,10 @@ class Agent(object):
 
 
     def act(self, observation):
-        # observation shape: (4, 84, 84, 1), convert to (1, 4, 84, 84)
         state = observation
         if state.ndim == 4 and state.shape[-1] == 1:
             state = state.squeeze(-1)
-        state = torch.FloatTensor(state).unsqueeze(0).to(self.device)  # (1, 4, 84, 84)
+        state = torch.FloatTensor(state.copy()).unsqueeze(0).to(self.device)  # Safe conversion
         with torch.no_grad():
             q_values = self.model(state)
         action = torch.argmax(q_values, dim=1).item()
