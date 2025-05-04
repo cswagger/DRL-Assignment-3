@@ -36,14 +36,14 @@ class Agent:
         self.n_actions = len(COMPLEX_MOVEMENT)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DuelingQNet(in_channels=4, n_actions=self.n_actions).to(self.device)
-        self.model.load_state_dict(torch.load("checkpoint_step900000.pth", map_location=self.device))
+        self.model.load_state_dict(torch.load("checkpoint2_step300000.pth", map_location=self.device, weights_only=True))
         self.model.eval()
         self.frame_stack = deque(maxlen=4)
 
     def preprocess(self, obs):
         gray = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
         resized = cv2.resize(gray, (84, 84), interpolation=cv2.INTER_AREA)
-        normalized = resized.astype(np.float32)
+        normalized = resized.astype(np.float32) / 255.0
         return normalized
 
     def act(self, observation):
