@@ -36,7 +36,7 @@ class Agent:
         self.n_actions = len(COMPLEX_MOVEMENT)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DuelingQNet(in_channels=4, n_actions=self.n_actions).to(self.device)
-        self.model.load_state_dict(torch.load("checkpoint_step250000.pth", map_location=self.device))
+        self.model.load_state_dict(torch.load("checkpoint_step900000.pth", map_location=self.device))
         self.model.eval()
         self.frame_stack = deque(maxlen=4)
 
