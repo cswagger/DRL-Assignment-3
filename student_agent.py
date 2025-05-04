@@ -5,29 +5,23 @@ import torch.nn as nn
 import cv2
 
 
-class DuelingQNet(nn.Module):
-    def __init__(self, in_channels, n_actions):
+class DuelingCNN(nn.Module):
+    def __init__(self, in_channels, num_actions):
         super().__init__()
-        self.feature = nn.Sequential(
-            nn.Conv2d(in_channels, 32, 8, stride=4),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, 4, stride=2),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, 3, stride=1),
-            nn.ReLU(),
+        self.extractor = nn.Sequential(
+            nn.Conv2d(in_channels, 32, kernel_size=8, stride=4), nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2), nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1), nn.ReLU(),
             nn.Flatten()
         )
-        self.fc = nn.Sequential(
-            nn.Linear(3136, 512),
-            nn.ReLU()
-        )
+        self.fc = nn.Linear(3136, 512)
         self.value = nn.Linear(512, 1)
-        self.advantage = nn.Linear(512, n_actions)
+        self.advantage = nn.Linear(512, 12)  # Use 12 if COMPLEX_MOVEMENT (used in training) has 12 actions
 
     def forward(self, x):
         x = x / 255.0  # normalize if input is uint8 [0,255]
-        x = self.feature(x)
-        x = self.fc(x)
+        x = self.extractor(x)
+        x = torch.relu(self.fc(x))
         v = self.value(x)
         a = self.advantage(x)
         return v + a - a.mean(dim=1, keepdim=True)
@@ -35,9 +29,9 @@ class DuelingQNet(nn.Module):
 
 class Agent:
     def __init__(self):
-        self.action_space = gym.spaces.Discrete(5)
+        self.action_space = gym.spaces.Discrete(12)  # Match training env action size
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = DuelingQNet(in_channels=4, n_actions=5).to(self.device)
+        self.model = DuelingCNN(in_channels=4, num_actions=12).to(self.device)
         self.model.load_state_dict(torch.load("checkpoint_step250000.pth", map_location=self.device))
         self.model.eval()
         self.frame_stack = []
