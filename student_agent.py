@@ -43,15 +43,14 @@ class Agent:
     def preprocess(self, obs):
         gray = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
         resized = cv2.resize(gray, (84, 84), interpolation=cv2.INTER_AREA)
-        normalized = resized.astype(np.float32) / 255.0
+        normalized = resized.astype(np.float32)
         return normalized
 
     def act(self, observation):
         preprocessed = self.preprocess(observation)
 
         if len(self.frame_stack) < 4:
-            for _ in range(4):
-                self.frame_stack.append(preprocessed)
+            self.frame_stack.extend([preprocessed] * (4 - len(self.frame_stack)))
         else:
             self.frame_stack.append(preprocessed)
 
