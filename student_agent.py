@@ -42,7 +42,7 @@ class Agent:
         self.model.eval()
 
         try:
-            ckpt = torch.load("model_best.pth", map_location=self.device, weights_only=True)
+            ckpt = torch.load("model.pth", map_location=self.device, weights_only=True)
             self.model.load_state_dict(ckpt["model"] if isinstance(ckpt, dict) and "model" in ckpt else ckpt)
         except Exception as e:
             print(f"[Agent] Model load failed: {e}")
